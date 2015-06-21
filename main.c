@@ -21,6 +21,8 @@ int main(int argc, char **argv)
 	double error, xi, norm, max = 0.0;
 	struct timeval start, end;
 
+	double sum;
+
 	printf("\nInitialize system of linear equations...\n");
 	/* allocate memory for the system of linear equations */
 	init_matrix(&A, &b, MATRIX_SIZE);
@@ -38,7 +40,37 @@ int main(int argc, char **argv)
 	gettimeofday(&start, NULL);
 
 	/* TODO: Hier muss die Aufgabe geloest werden */
+	while(1)
+	{
+		/* Berechne Euklidischen Abstand */
+		sum = 0.0;
+		for (i = 0; i < MATRIX_SIZE; i++) {
+			sum += (X_old[i] - X[i])*(X_old[i] - X[i]);
+		}
+		norm = sqrt(sum);
 
+		/* Prüfe Abbruchbedingung */
+		if ( norm < sqrt(0.0000001 * MATRIX_SIZE))
+			break;
+	
+		/* save X in X_Old for next interation step */
+		for (i = 0; i < MATRIX_SIZE; i++) {
+			X_old[i] = X[i];
+		}
+
+		/* calculate next iteration step of X */
+		iterations++;
+		for (i = 0; i < MATRIX_SIZE; i++) {
+			sum = 0.0; // initialisiere Summe mit 0
+			for (j = 0; j < MATRIX_SIZE; j++) {
+				 if (i != j) {
+					sum += A[i][j] * X_old[j];
+				}
+			}
+		
+			X[i] = (b[i] - sum) / A[i][i];
+		}
+	}
 	gettimeofday(&end, NULL);
 
 	if (MATRIX_SIZE < 16) {
