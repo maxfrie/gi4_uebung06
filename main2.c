@@ -6,7 +6,7 @@
 #include <sys/time.h>
 #include "init_matrix.h"
 
-#define MATRIX_SIZE (1024)
+#define MATRIX_SIZE 	1024
 
 double **A;
 double *b;
@@ -16,12 +16,10 @@ double *temp;
 
 int main(int argc, char **argv)
 {
+	struct timeval start, end;
 	unsigned int i, j;
 	unsigned int iterations = 0;
 	double error, xi, norm, max = 0.0;
-	struct timeval start, end;
-
-	double sum;
 
 	printf("\nInitialize system of linear equations...\n");
 	/* allocate memory for the system of linear equations */
@@ -39,38 +37,33 @@ int main(int argc, char **argv)
 
 	gettimeofday(&start, NULL);
 
-	/* TODO: Hier muss die Aufgabe geloest werden */
-	while(1)
-	{
-		/* Berechne Euklidischen Abstand */
-		sum = 0.0;
-		for (i = 0; i < MATRIX_SIZE; i++) {
-			sum += (X_old[i] - X[i])*(X_old[i] - X[i]);
-		}
-		norm = sqrt(sum);
-
-		/* Prüfe Abbruchbedingung */
-		if ( norm < sqrt(0.0000001 * MATRIX_SIZE))
-			break;
-	
-		/* swap pointers to save X_old */
-		temp = X;
-		X = X_old;
-		X_old = temp;
-
-		/* calculate next iteration step of X */
+	/* Jacobi iterations */
+	while (1) {
 		iterations++;
+
+		temp = X_old;
+		X_old = X;
+		X = temp;
 		for (i = 0; i < MATRIX_SIZE; i++) {
-			sum = 0.0; // initialisiere Summe mit 0
-			for (j = 0; j < MATRIX_SIZE; j++) {
-				 if (i != j) {
-					sum += A[i][j] * X_old[j];
-				}
-			}
-		
-			X[i] = (b[i] - sum) / A[i][i];
+			for (j = 0, xi = 0.0; j < i; j++)
+				xi += A[i][j] * X_old[j];
+			for (j = i + 1; j < MATRIX_SIZE; j++)
+				xi += A[i][j] * X_old[j];
+			X[i] = (b[i] - xi) / A[i][i];
+		}
+
+		if (iterations % 500 == 0) {	/* calculate the Euclidean norm between X_old and X */
+			norm = 0.0;
+			for (i = 0; i < MATRIX_SIZE; i++)
+				norm += (X_old[i] - X[i]) * (X_old[i] - X[i]);
+
+			/* check the break condition */
+			norm /= (double)MATRIX_SIZE;
+			if (norm < 0.0000001)
+				break;
 		}
 	}
+
 	gettimeofday(&end, NULL);
 
 	if (MATRIX_SIZE < 16) {
@@ -84,6 +77,7 @@ int main(int argc, char **argv)
 	}
 
 	printf("Check the result...\n");
+
 	/* 
 	 * check the result 
 	 * X[i] have to be 1
@@ -114,3 +108,4 @@ int main(int argc, char **argv)
 
 	return 0;
 }
+
